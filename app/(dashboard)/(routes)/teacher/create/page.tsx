@@ -1,7 +1,7 @@
 "use client";
 import * as z from "zod";
 import axios from "axios";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -16,12 +16,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Ghost } from "lucide-react";
+import toast from "react-hot-toast";
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
 });
 
 const CreatePage = () => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,9 +34,18 @@ const CreatePage = () => {
   });
 
   const { isSubmitting, isValid } = form.formState;
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try{
+      const response = await axios.post("/api/course", values);
+      router.push(`/teacher/courses/${response.data.id}`)
+    }
+    catch {
+      toast.error("Something went wrong");
+    }
   };
+
 
   return (
     <div className="max-w-5xl mx-auto flex md:items-center md:justify-center h-full p-6 ">
@@ -49,23 +62,35 @@ const CreatePage = () => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Course Title
-                  </FormLabel>
+                  <FormLabel>Course Title</FormLabel>
                   <FormControl>
-                    <Input 
-                    disabled={isSubmitting}
-                    placeholder="e.g 'Advanced Web-development'"
-                    {...field}
+                    <Input
+                      disabled={isSubmitting}
+                      placeholder="e.g 'Advanced Web-development'"
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
                     What will you teach in this course ?
                   </FormDescription>
-                  <FormMessage/>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+            <div className="flex items-center gap-x-2">
+              <Link href='/'>
+                <Button
+                type="button"
+                variant='ghost'>
+                  Cancel
+                </Button>
+              </Link>
+              <Button
+              type="submit"
+              disabled={!isValid || isSubmitting}>
+                Continue
+              </Button>
+            </div>
           </form>
         </Form>
       </div>
